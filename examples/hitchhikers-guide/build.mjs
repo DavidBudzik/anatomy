@@ -114,12 +114,18 @@ const faceMatrix = (u, zd, dy = 0) => {
 };
 const textAt = (u, zd, text, size, { dy = 0, anchor = "start", cls = "guide-ink" } = {}) =>
   `<g class="${cls}">${k.faceTextSvg(faceMatrix(u, zd, dy), text, { size, tone: "hi", anchor })}</g>`;
+const bold = (svgText) => svgText.replace("<text ", '<text font-weight="700" font-style="italic" ');
+const boldAt = (u, zd, text, size, opts = {}) => `<g class="guide-ink">${bold(k.faceTextSvg(faceMatrix(u, zd, opts.dy ?? 0), text, { size, tone: "hi", anchor: opts.anchor ?? "start" }))}</g>`;
 const ink = (list, { dy = 0, tone = "hi", cls = "guide-ink", closed = false, free = true } = {}) =>
   k.lineSvg(wall(list, dy, closed), { tone, className: cls, free });
 const fillOn = (list, dy, cls) => `<path class="${cls}" d="${wall(list, dy, true)}"/>`;
 
 const body = [];
 
+const bookPages = (cu, cz, s) => [
+  [[cu - 0.04 * s, cz + 0.62 * s], [cu - 0.5 * s, cz + 0.9 * s], [cu - s, cz + 0.72 * s], [cu - s, cz - 0.8 * s], [cu - 0.5 * s, cz - 0.62 * s], [cu - 0.04 * s, cz - 0.4 * s]],
+  [[cu + 0.04 * s, cz + 0.62 * s], [cu + 0.5 * s, cz + 0.9 * s], [cu + s, cz + 0.72 * s], [cu + s, cz - 0.8 * s], [cu + 0.5 * s, cz - 0.62 * s], [cu + 0.04 * s, cz - 0.4 * s]],
+];
 const bookLines = (cu, cz, s) => [
   [[cu - 0.2 * s, cz + 0.5 * s], [cu - s, cz + 0.8 * s], [cu - s, cz - 0.8 * s], [cu - 0.2 * s, cz - 0.5 * s]],
   [[cu + 0.2 * s, cz + 0.5 * s], [cu + s, cz + 0.8 * s], [cu + s, cz - 0.8 * s], [cu + 0.2 * s, cz - 0.5 * s]],
@@ -134,7 +140,7 @@ body.push(prism(GLASS, T, T + GLASS_DY, { cls: "guide-glass", tone: "mid" }));
 
 // Screen furniture: header, library rail and the two views.
 const headerDy = GLASS_DY;
-body.push(textAt(11, 172, "42", 3.2, { dy: headerDy }));
+body.push(textAt(11, 172, "42", 3.6, { dy: headerDy }));
 {
   const cx = 46;
   const cz = 172;
@@ -150,7 +156,7 @@ body.push(textAt(11, 172, "42", 3.2, { dy: headerDy }));
 body.push(ink(rectOf(72, 170.5, 77.5, 174.5), { dy: headerDy, closed: true }));
 body.push(ink([[78, 171.8], [79, 171.8], [79, 173.2], [78, 173.2]], { dy: headerDy, closed: true }));
 body.push(ink([[10, 165], [78, 165]], { dy: headerDy, tone: "lo" }));
-body.push(textAt(11, 156, "LIBRARY", 3.6, { dy: headerDy }));
+body.push(boldAt(11, 156, "LIBRARY", 3.8, { dy: headerDy }));
 
 // Library rail
 body.push(fillOn(rectOf(10, 127, 20, 137), headerDy, "guide-ink-fill"));
@@ -173,18 +179,18 @@ body.push(ink([[24, 70], [24, 146]], { dy: headerDy, tone: "lo" }));
 // Cover view: the book, the title and DON'T PANIC.
 {
   const cover = [];
-  for (const shape of bookLines(52, 126, 9)) cover.push(ink(shape, { dy: headerDy, tone: "hi", closed: true }));
-  cover.push(textAt(52, 108, "The Hitchhiker’s", 4.2, { dy: headerDy, anchor: "middle" }));
-  cover.push(textAt(52, 101.5, "Guide", 4.2, { dy: headerDy, anchor: "middle" }));
+  for (const shape of bookPages(52, 126, 10)) cover.push(`<path class="guide-book" d="${wall(shape, headerDy, true)}"/>`);
+  cover.push(boldAt(52, 110, "The Hitchhiker’s", 4.2, { dy: headerDy, anchor: "middle" }));
+  cover.push(boldAt(52, 102.5, "Guide", 4.2, { dy: headerDy, anchor: "middle" }));
   cover.push(ink([[36, 93], [78, 93]], { dy: headerDy, tone: "lo" }));
-  cover.push(textAt(52, 84, "DON’T PANIC", 4, { dy: headerDy, anchor: "middle" }));
+  cover.push(boldAt(52, 84, "DON’T PANIC", 4.4, { dy: headerDy, anchor: "middle" }));
   body.push(`<g data-cover>${cover.join("")}</g>`);
 }
 
 // Entry view: the name and the rule lines that stand for its text.
 {
   const entry = [];
-  entry.push(`<g data-name-wrap>${k.faceTextSvg(faceMatrix(52, 117, headerDy), ENTRIES[1].name, { size: 4, tone: "hi", anchor: "middle" }).replace("<text ", '<text data-name ')}</g>`);
+  entry.push(`<g data-name-wrap>${k.faceTextSvg(faceMatrix(52, 117, headerDy), ENTRIES[1].name, { size: 4, tone: "hi", anchor: "middle" }).replace("<text ", '<text data-name font-weight="700" font-style="italic" ')}</g>`);
   const rows = [106, 99.5, 93, 86.5, 80];
   rows.forEach((zd, r) => {
     entry.push(`<path data-rule="${r}" class="iso-line guide-ink" data-tone="hi" data-free="" d="${wall([[36, zd], [78, zd]], headerDy)}"/>`);
@@ -220,7 +226,7 @@ for (let i = 0; i < 5; i++) {
 body.push(textAt(100, 100.5, "SCROLL", 2.4, { anchor: "middle", cls: "guide-orange-ink" }));
 body.push(prism(roundOf(90, 56, 110, 96, 2.5), T, T + 1.0, { cls: "guide-slot", tone: "lo" }));
 body.push(prism(roundOf(91.5, 58, 108.5, 94, 3), T, T + 3.6, { cls: "guide-orange", tone: "lo" }));
-for (let zd = 61; zd <= 91; zd += 3) body.push(ink([[91.5, zd], [108.5, zd]], { dy: 3.6, tone: "lo", cls: "guide-rib" }));
+for (let zd = 60.5; zd <= 92; zd += 2.3) for (let u = 92.5; u <= 107.5; u += 2.3) body.push(`<circle class="guide-knurl" cx="${r3(F(u, zd, 3.6)[0])}" cy="${r3(F(u, zd, 3.6)[1])}" r="0.42"/>`);
 
 // NAV cluster
 body.push(textAt(100, 42.2, "NAV", 2.4, { anchor: "middle", cls: "guide-orange-ink" }));
@@ -250,6 +256,13 @@ body.push(fillOn(circleOf(100, 8, 1.1, 12), 0, "guide-led"));
     ridges.push(`M${r3(inner[0])} ${r3(inner[1])}L${r3(outer[0])} ${r3(outer[1])}`);
   }
   body.push(`<path class="iso-line guide-ink" data-tone="lo" d="${ridges.join("")}"/>`);
+  const sideMatrix = (zd) => {
+    const o = k.iso([W + 0.3, 0, Z0 + zd], P);
+    const uy = k.iso([W + 0.3, 1, Z0 + zd], P);
+    const vz = k.iso([W + 0.3, 0, Z0 + zd - 1], P);
+    return `matrix(${r3(uy[0] - o[0])} ${r3(uy[1] - o[1])} ${r3(vz[0] - o[0])} ${r3(vz[1] - o[1])} ${r3(o[0])} ${r3(o[1])})`;
+  };
+  body.push(`<g class="guide-ink">${k.faceTextSvg(sideMatrix(112), "VOL", { size: 3.2, tone: "hi", anchor: "middle" })}</g>`);
   body.push(`<circle class="guide-ink-fill" cx="${r3(at(T / 2, DIAL.zd)[0])}" cy="${r3(at(T / 2, DIAL.zd)[1])}" r="0.8"/>`);
 }
 
@@ -398,7 +411,9 @@ const page =
 .guide-dial{fill:#d2d1cb;stroke:#8a8983;stroke-width:.3}
 .guide-led{fill:#e0823f}
 .guide-body .iso-dots{}
-.iso-dots circle{fill:#8c8a84}
+.iso-dots circle{fill:#5a5852}
+.guide-knurl{fill:#8a3413}
+.guide-book{fill:none;stroke:#25252a;stroke-width:.9;stroke-linejoin:round}
 .guide-red{fill:#d8402a;stroke:none}
 .guide-ink-fill{fill:#25252a;stroke:none}
 .iso-line.guide-ink{stroke:#25252a}
